@@ -2,14 +2,14 @@
 
 namespace IronLox.GenerateAst;
 
-class AstRepresentation(string rootInterfaceName, string visitorInterfaceName, string className, IEnumerable<AstParameter> parameters)
+class TreeNode(string rootInterfaceName, string visitorInterfaceName, string className, IEnumerable<TreeNodeParameter> parameters)
 {
     public string ClassName => className;
 
     readonly string rootInterfaceName = rootInterfaceName;
     readonly string visitorInterfaceName = visitorInterfaceName;
     readonly string className = className;
-    readonly IEnumerable<AstParameter> parameters = parameters;
+    readonly IEnumerable<TreeNodeParameter> parameters = parameters;
 
     public override string ToString()
     {

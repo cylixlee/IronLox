@@ -1,6 +1,7 @@
-﻿using IronLox.Ast;
-using IronLox.ErrorHandling;
+﻿using IronLox.ErrorHandling;
 using IronLox.Scanning;
+using IronLox.SyntaxTree;
+using IronLox.SyntaxTree.Expressions;
 
 namespace IronLox.Parsing;
 

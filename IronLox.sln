@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34309.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IronLox", "IronLox\IronLox.csproj", "{F4A06365-EB04-470C-89CF-1CB92BB5C3B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronLox.GenerateAst", "IronLox.GenerateAst\IronLox.GenerateAst.csproj", "{4C510A50-DF66-4609-9787-77CE9E851200}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IronLox.SourceGeneration", "IronLox.SourceGeneration\IronLox.SourceGeneration.csproj", "{FF6E90E7-9B88-4ED8-AA9E-D8D01B88B546}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{F4A06365-EB04-470C-89CF-1CB92BB5C3B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4A06365-EB04-470C-89CF-1CB92BB5C3B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4A06365-EB04-470C-89CF-1CB92BB5C3B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4C510A50-DF66-4609-9787-77CE9E851200}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4C510A50-DF66-4609-9787-77CE9E851200}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4C510A50-DF66-4609-9787-77CE9E851200}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4C510A50-DF66-4609-9787-77CE9E851200}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF6E90E7-9B88-4ED8-AA9E-D8D01B88B546}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF6E90E7-9B88-4ED8-AA9E-D8D01B88B546}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF6E90E7-9B88-4ED8-AA9E-D8D01B88B546}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF6E90E7-9B88-4ED8-AA9E-D8D01B88B546}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

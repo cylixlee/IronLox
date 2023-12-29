@@ -2,7 +2,7 @@
 
 namespace IronLox.GenerateAst;
 
-record AstParameter(string Type, string Name, bool IsReadonly = true)
+record TreeNodeParameter(string Type, string Name, bool IsReadonly = true)
 {
     public override string ToString()
     {

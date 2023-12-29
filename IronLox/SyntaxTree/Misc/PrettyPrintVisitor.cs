@@ -1,11 +1,12 @@
-﻿using System.Text;
+﻿using IronLox.SyntaxTree.Expressions;
+using System.Text;
 
-namespace IronLox.Ast.Misc;
+namespace IronLox.SyntaxTree.Misc;
 
 /// <summary>
 /// A class of different pretty-print implementations for expressions, the Visitor in Visitor Pattern.
 /// </summary>
-public class PrettyPrintVisitor : IVisitor<string>
+public class PrettyPrintVisitor : IExpressionVisitor<string>
 {
     // Basically put operators before other tokens.
     public string Visit(Binary element) => Parenthesize(element.Operator.Lexeme, element.Left, element.Right);

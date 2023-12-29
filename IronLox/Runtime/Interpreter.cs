@@ -1,10 +1,11 @@
-﻿using IronLox.Ast;
-using IronLox.ErrorHandling;
+﻿using IronLox.ErrorHandling;
 using IronLox.Scanning;
+using IronLox.SyntaxTree;
+using IronLox.SyntaxTree.Expressions;
 
 namespace IronLox.Runtime;
 
-public class Interpreter : IVisitor<object?>
+public class Interpreter : IExpressionVisitor<object?>
 {
     public void Interpret(IExpression expression)
     {
