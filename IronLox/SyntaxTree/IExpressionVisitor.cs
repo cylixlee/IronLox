@@ -6,8 +6,8 @@ namespace IronLox.SyntaxTree;
 
 public interface IExpressionVisitor<T>
 {
-    T Visit(Binary element);
-    T Visit(Grouping element);
-    T Visit(Literal element);
-    T Visit(Unary element);
+    T Visit(BinaryExpression element);
+    T Visit(GroupingExpression element);
+    T Visit(LiteralExpression element);
+    T Visit(UnaryExpression element);
 }

@@ -46,7 +46,7 @@ public record Token(TokenType Type, string Lexeme, object? Literal, int Line)
         var builder = new StringBuilder("[Type ").Append(Type);
         if (Literal is not null)
         {
-            builder.Append(", Literal ");
+            builder.Append(", LiteralExpression ");
             builder.Append(Literal);
         }
         else if (!string.IsNullOrWhiteSpace(Lexeme))

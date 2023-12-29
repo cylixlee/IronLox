@@ -1,18 +1,21 @@
-﻿using IronLox.ErrorHandling;
-using IronLox.Scanning;
+﻿using IronLox.Scanning;
 using IronLox.SyntaxTree;
 using IronLox.SyntaxTree.Expressions;
+using IronLox.SyntaxTree.Statements;
+using IronLox.Utility;
 
 namespace IronLox.Runtime;
 
-public class Interpreter : IExpressionVisitor<object?>
+public class Interpreter : IExpressionVisitor<object?>, IStatementVisitor<object?>
 {
-    public void Interpret(IExpression expression)
+    public void Interpret(IEnumerable<IStatement> statements)
     {
         try
         {
-            var value = expression.Accept(this);
-            Console.WriteLine(Stringify(value));
+            foreach (var statement in statements)
+            {
+                statement.Accept(this);
+            }
         }
         catch (RuntimeException exception)
         {
@@ -20,20 +23,8 @@ public class Interpreter : IExpressionVisitor<object?>
         }
     }
 
-    static string Stringify(object? value)
-    {
-        if (value is null) return "nil";
-        if (value is double)
-        {
-            var text = value.ToString()!;
-            if (text.EndsWith(".0"))
-                text = text[0..^2];
-            return text;
-        }
-        return value.ToString()!;
-    }
-
-    public object? Visit(Binary element)
+    #region Expressions
+    public object? Visit(BinaryExpression element)
     {
         var left = element.Left.Accept(this)!;
         var right = element.Right.Accept(this)!;
@@ -44,6 +35,8 @@ public class Interpreter : IExpressionVisitor<object?>
             // Arithmetics
             TokenType.Plus when left is double leftDouble && right is double rightDouble => leftDouble + rightDouble,
             TokenType.Plus when left is string leftString && right is string rightString => leftString + rightString,
+            TokenType.Plus when left is string leftString && right is double rightNumber => leftString + Stringify(rightNumber),
+            TokenType.Plus when left is double leftNumber && right is string rightString => Stringify(leftNumber) + rightString,
             TokenType.Minus => left.EnsureNumber() - right.EnsureNumber(),
             TokenType.Slash => left.EnsureNumber() / right.EnsureNumber(),
             TokenType.Star => left.EnsureNumber() * right.EnsureNumber(),
@@ -66,10 +59,10 @@ public class Interpreter : IExpressionVisitor<object?>
         };
     }
 
-    public object? Visit(Grouping element) => element.Expression.Accept(this);
-    public object? Visit(Literal element) => element.Value;
+    public object? Visit(GroupingExpression element) => element.Expression.Accept(this);
+    public object? Visit(LiteralExpression element) => element.Value;
 
-    public object? Visit(Unary element)
+    public object? Visit(UnaryExpression element)
     {
         var right = element.Right.Accept(this);
 
@@ -80,6 +73,31 @@ public class Interpreter : IExpressionVisitor<object?>
             // Unreachable
             _ => throw new NotImplementedException(),
         };
+    }
+    #endregion
+
+    #region Statements
+    public object? Visit(ExpressionStatement element) => element.Expression.Accept(this);
+
+    public object? Visit(PrintStatement element)
+    {
+        Console.WriteLine(Stringify(element.Expression.Accept(this)));
+        return null;
+    }
+    #endregion
+
+    #region Helpers
+    static string Stringify(object? value)
+    {
+        if (value is null) return "nil";
+        if (value is double)
+        {
+            var text = value.ToString()!;
+            if (text.EndsWith(".0"))
+                text = text[0..^2];
+            return text;
+        }
+        return value.ToString()!;
     }
 
     static bool IsConvertiblyTrue(object? value)
@@ -96,6 +114,7 @@ public class Interpreter : IExpressionVisitor<object?>
 
         return left.Equals(right);
     }
+    #endregion
 }
 
 static class InterpreterExtension

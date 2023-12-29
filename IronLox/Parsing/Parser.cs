@@ -1,7 +1,8 @@
-﻿using IronLox.ErrorHandling;
-using IronLox.Scanning;
+﻿using IronLox.Scanning;
 using IronLox.SyntaxTree;
 using IronLox.SyntaxTree.Expressions;
+using IronLox.SyntaxTree.Statements;
+using IronLox.Utility;
 
 namespace IronLox.Parsing;
 
@@ -26,19 +27,35 @@ public class Parser(IList<Token> tokens)
     readonly IList<Token> tokens = tokens;
     int current = 0;
 
-    public IExpression? Parse()
+    #region Statements
+    public IEnumerable<IStatement> Parse()
     {
-        try
+        var statements = new List<IStatement>();
+        while (!HasReachedEnd())
         {
-            return ParseExpression();
+            statements.Add(ParseStatement());
         }
-        catch (ParseException)
-        {
-            // Simply returns null here because recovery from panic mode hasn't been implemented.
-            return null;
-        }
+        return statements;
     }
 
+    public IStatement ParseStatement() => Match(TokenType.Print) ? ParsePrintStatement() : ParseExpressionStatement();
+
+    public IStatement ParsePrintStatement()
+    {
+        var expression = ParseExpression();
+        TryConsume(TokenType.Semicolon, "expected ';' after a statement.");
+        return new PrintStatement(expression);
+    }
+
+    public IStatement ParseExpressionStatement()
+    {
+        var expression = ParseExpression();
+        TryConsume(TokenType.Semicolon, "expected ';' after a statement.");
+        return new ExpressionStatement(expression);
+    }
+    #endregion
+
+    #region Expressions
     // expression -> equality
     IExpression ParseExpression() => ParseEquality();
 
@@ -50,7 +67,7 @@ public class Parser(IList<Token> tokens)
         {
             var @operator = Previous();
             var right = ParseComparison();
-            expression = new Binary(expression, @operator, right);
+            expression = new BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
@@ -63,7 +80,7 @@ public class Parser(IList<Token> tokens)
         {
             var @operator = Previous();
             var right = ParseTerm();
-            expression = new Binary(expression, @operator, right);
+            expression = new BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
@@ -76,7 +93,7 @@ public class Parser(IList<Token> tokens)
         {
             var @operator = Previous();
             var right = ParseFactor();
-            expression = new Binary(expression, @operator, right);
+            expression = new BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
@@ -89,7 +106,7 @@ public class Parser(IList<Token> tokens)
         {
             var @operator = Previous();
             var right = ParseUnary();
-            expression = new Binary(expression, @operator, right);
+            expression = new BinaryExpression(expression, @operator, right);
         }
         return expression;
     }
@@ -102,7 +119,7 @@ public class Parser(IList<Token> tokens)
         {
             var @operator = Previous();
             var right = ParseUnary();
-            return new Unary(@operator, right);
+            return new UnaryExpression(@operator, right);
         }
         return ParsePrimary();
     }
@@ -111,24 +128,26 @@ public class Parser(IList<Token> tokens)
     //          | "(" expression ")";
     IExpression ParsePrimary()
     {
-        if (Match(TokenType.True)) return new Literal(true);
-        if (Match(TokenType.False)) return new Literal(false);
-        if (Match(TokenType.Nil)) return new Literal(null);
+        if (Match(TokenType.True)) return new LiteralExpression(true);
+        if (Match(TokenType.False)) return new LiteralExpression(false);
+        if (Match(TokenType.Nil)) return new LiteralExpression(null);
 
         if (Match(TokenType.Number, TokenType.String))
         {
-            return new Literal(Previous().Literal);
+            return new LiteralExpression(Previous().Literal);
         }
 
         if (Match(TokenType.LeftParenthesis))
         {
             var expression = ParseExpression();
             TryConsume(TokenType.RightParenthesis, "expect a closing ')'.");
-            return new Grouping(expression);
+            return new GroupingExpression(expression);
         }
         throw Panic(Peek(), "expression expected.");
     }
+    #endregion
 
+    #region Helpers
     // Checks whether the current token fulfills the type requirement.
     // ... `consume` (not the method, but literally) it if positive.
     bool Match(params TokenType[] types)
@@ -187,8 +206,9 @@ public class Parser(IList<Token> tokens)
     bool Check(TokenType type) => !HasReachedEnd() && Peek().Type == type;
 
     // Literally.
-    bool HasReachedEnd() => current >= tokens.Count;
+    bool HasReachedEnd() => tokens[current].Type is TokenType.EndOfFile;
     Token? Advance() => HasReachedEnd() ? null : tokens[current++];
     Token Peek() => tokens[current];
     Token Previous() => tokens[current - 1];
+    #endregion
 }

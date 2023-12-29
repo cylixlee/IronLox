@@ -1,4 +1,4 @@
-﻿using IronLox.ErrorHandling;
+﻿using IronLox.Utility;
 
 namespace IronLox.Scanning;
 

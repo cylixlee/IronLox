@@ -4,7 +4,7 @@ using IronLox.Scanning;
 
 namespace IronLox.SyntaxTree.Expressions;
 
-public class Unary(Token @operator, IExpression right) : IExpression
+public class UnaryExpression(Token @operator, IExpression right) : IExpression
 {
     public Token Operator { get; } = @operator;
     public IExpression Right { get; } = right;

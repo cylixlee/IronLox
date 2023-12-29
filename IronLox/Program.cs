@@ -1,7 +1,7 @@
-﻿using IronLox.ErrorHandling;
-using IronLox.Parsing;
+﻿using IronLox.Parsing;
 using IronLox.Runtime;
 using IronLox.Scanning;
+using IronLox.Utility;
 
 namespace IronLox;
 
@@ -23,17 +23,6 @@ class Program
 
         if (args.Length == 1) RunWithFile(args[0]);
         else RunPrompt();
-
-        //var expression = new Binary(
-        //    new Unary(
-        //        new Token(TokenType.Minus, "-", null, 1),
-        //        new Literal(123)
-        //    ),
-        //    new Token(TokenType.Star, "*", null, 1),
-        //    new Grouping(new Literal(45.67))
-        //);
-
-        //Console.WriteLine(new PrettyPrintVisitor().Visit(expression));
     }
 
     // Reads all text from the file and passes to the Run method.
@@ -71,15 +60,13 @@ class Program
         }
 
         var parser = new Parser(tokens);
-        var expression = parser.Parse();
+        var statements = parser.Parse();
 
         if (ErrorHelper.CompileTimeErrorOccurred)
         {
             return;
         }
 
-        interpreter.Interpret(expression!);
-        //Console.WriteLine(expression!.Accept(new PrettyPrintVisitor()));
-        //foreach (var token in tokens) Console.WriteLine(token);
+        interpreter.Interpret(statements);
     }
 }

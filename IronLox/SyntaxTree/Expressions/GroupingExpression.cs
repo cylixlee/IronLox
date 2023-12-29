@@ -2,9 +2,9 @@
 
 namespace IronLox.SyntaxTree.Expressions;
 
-public class Literal(object? value) : IExpression
+public class GroupingExpression(IExpression expression) : IExpression
 {
-	public object? Value { get; } = value;
+	public IExpression Expression { get; } = expression;
 
 	public T Accept<T>(IExpressionVisitor<T> visitor) => visitor.Visit(this);
 }

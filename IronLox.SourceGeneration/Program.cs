@@ -23,12 +23,18 @@ class Program
         }
         var outputEntry = args.Length == 0 ? DefaultOutputDirectory : args[0];
 
-
+        // Expressions
         DefineSyntaxTree(outputEntry, "Expressions", "IExpression", "IExpressionVisitor", [
-            "Binary : IExpression left, Token @operator, IExpression right",
-            "Grouping : IExpression expression",
-            "Literal : object? value",
-            "Unary : Token @operator, IExpression right",
+            "BinaryExpression : IExpression left, Token @operator, IExpression right",
+            "GroupingExpression : IExpression expression",
+            "LiteralExpression : object? value",
+            "UnaryExpression : Token @operator, IExpression right",
+        ]);
+
+        // Statements
+        DefineSyntaxTree(outputEntry, "Statements", "IStatement", "IStatementVisitor", [
+            "ExpressionStatement : IExpression expression",
+            "PrintStatement : IExpression expression",
         ]);
     }
 
