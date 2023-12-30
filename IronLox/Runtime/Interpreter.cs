@@ -1,8 +1,7 @@
 ﻿using IronLox.Scanning;
-using IronLox.SyntaxTree;
-using IronLox.SyntaxTree.Expressions;
-using IronLox.SyntaxTree.Statements;
 using IronLox.Utility;
+using static IronLox.SyntaxTree.Expressions;
+using static IronLox.SyntaxTree.Statements;
 
 namespace IronLox.Runtime;
 

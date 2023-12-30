@@ -1,6 +1,5 @@
-﻿using IronLox.SyntaxTree;
-using IronLox.SyntaxTree.Expressions;
-using System.Text;
+﻿using System.Text;
+using static IronLox.SyntaxTree.Expressions;
 
 namespace IronLox.Utility;
 
