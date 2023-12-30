@@ -9,4 +9,9 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\IronLox.SourceGenerator\IronLox.SourceGenerator.csproj"
+					  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+  </ItemGroup>
+
 </Project>
