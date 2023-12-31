@@ -6,7 +6,21 @@ using static IronLox.SyntaxTree.Statements;
 namespace IronLox.Parsing;
 
 /*
- * expression -> equality
+ * program -> declaration* EOF;
+ * declaration -> varDecl
+ *              | statement;
+ * statement -> exprStmt
+ *              | printStmt
+ *              | block;
+ * block -> "{" declaration* "}";
+ * exprStmt -> expression ";";
+ * printStmt -> "print" expression ";";
+ * varDecl -> "var" IDENTIFIER ( "=" expression )? ";";
+ * 
+ * 
+ * expression -> assignment;
+ * assignment -> IDENTIFIER "=" assignment
+ *              | equality;
  * equality -> comparison (("!=" | "==") comparison)*;
  * comparison -> term ((">" | ">=" | "<" | "<=") term)*;
  * term -> factor (("+" | "-") factor)*;
@@ -14,7 +28,8 @@ namespace IronLox.Parsing;
  * unary -> ("!" | "-") unary
  *         | primary;
  * primary -> NUMBER | STRING | "true" | "false" | "nil"
- *           | "(" expression ")";
+ *           | "(" expression ")"
+ *           | IDENTIFIER;
  */
 
 /// <summary>
@@ -32,33 +47,101 @@ public class Parser(IList<Token> tokens)
         var statements = new List<IStatement>();
         while (!HasReachedEnd())
         {
-            statements.Add(ParseStatement());
+            if (ParseDeclaration() is IStatement statement)
+            {
+                statements.Add(statement);
+            }
         }
         return statements;
     }
 
-    public IStatement ParseStatement() => Match(TokenType.Print) ? ParsePrintStatement() : ParseExpressionStatement();
+    IStatement? ParseDeclaration()
+    {
+        try
+        {
+            if (Match(TokenType.Var)) return ParseVariableDeclaration();
+            return ParseStatement();
+        }
+        catch (ParseException)
+        {
+            Synchronize();
+            return null;
+        }
+    }
 
-    public IStatement ParsePrintStatement()
+    IStatement ParseVariableDeclaration()
+    {
+        var name = TryConsume(TokenType.Identifier, "expected variable name");
+
+        IExpression? initializer = null;
+        if (Match(TokenType.Equal))
+        {
+            initializer = ParseExpression();
+        }
+
+        TryConsume(TokenType.Semicolon, "expected ';' after variable declaration.");
+        return new VariableDeclarationStatement(name, initializer);
+    }
+
+    IStatement ParseStatement()
+    {
+        if (Match(TokenType.Print))
+            return ParsePrintStatement();
+        if (Match(TokenType.LeftBracket))
+            return new BlockStatement(ParseBlock());
+        return ParseExpressionStatement();
+    }
+
+    IStatement ParsePrintStatement()
     {
         var expression = ParseExpression();
         TryConsume(TokenType.Semicolon, "expected ';' after a statement.");
         return new PrintStatement(expression);
     }
 
-    public IStatement ParseExpressionStatement()
+    IStatement ParseExpressionStatement()
     {
         var expression = ParseExpression();
         TryConsume(TokenType.Semicolon, "expected ';' after a statement.");
         return new ExpressionStatement(expression);
     }
+
+    IEnumerable<IStatement> ParseBlock()
+    {
+        var statements = new List<IStatement>();
+        while (!Check(TokenType.RightBracket) && !HasReachedEnd())
+        {
+            if (ParseDeclaration() is IStatement statement)
+            {
+                statements.Add(statement);
+            }
+        }
+        TryConsume(TokenType.RightBracket, "expect '}' at block end.");
+        return statements;
+    }
     #endregion
 
     #region Expressions
-    // expression -> equality
-    IExpression ParseExpression() => ParseEquality();
+    IExpression ParseExpression() => ParseAssignment();
 
-    // equality -> comparison (("!=" | "==") comparison)*;
+    IExpression ParseAssignment()
+    {
+        var expression = ParseEquality();
+        if (Match(TokenType.Equal))
+        {
+            var leftValue = Previous();
+            var rightValue = ParseAssignment();
+            if (expression is VariableExpression variableExpression)
+            {
+                var name = variableExpression.Name;
+                return new AssignExpression(name, rightValue);
+            }
+
+            throw Panic(leftValue, "invalid assignment target.");
+        }
+        return expression;
+    }
+
     IExpression ParseEquality()
     {
         var expression = ParseComparison();
@@ -71,7 +154,6 @@ public class Parser(IList<Token> tokens)
         return expression;
     }
 
-    // comparison -> term ((">" | ">=" | "<" | "<=") term)*;
     IExpression ParseComparison()
     {
         var expression = ParseTerm();
@@ -84,7 +166,6 @@ public class Parser(IList<Token> tokens)
         return expression;
     }
 
-    // term -> factor (("+" | "-") factor)*;
     IExpression ParseTerm()
     {
         var expression = ParseFactor();
@@ -97,7 +178,6 @@ public class Parser(IList<Token> tokens)
         return expression;
     }
 
-    // factor -> unary (("*" | "/") unary)*;
     IExpression ParseFactor()
     {
         var expression = ParseUnary();
@@ -110,8 +190,6 @@ public class Parser(IList<Token> tokens)
         return expression;
     }
 
-    // unary -> ("!" | "-") unary
-    //          | primary;
     IExpression ParseUnary()
     {
         if (Match(TokenType.Bang, TokenType.Minus))
@@ -123,8 +201,6 @@ public class Parser(IList<Token> tokens)
         return ParsePrimary();
     }
 
-    // primary -> NUMBER | STRING | "true" | "false" | "nil"
-    //          | "(" expression ")";
     IExpression ParsePrimary()
     {
         if (Match(TokenType.True)) return new LiteralExpression(true);
@@ -135,6 +211,8 @@ public class Parser(IList<Token> tokens)
         {
             return new LiteralExpression(Previous().Literal);
         }
+
+        if (Match(TokenType.Identifier)) return new VariableExpression(Previous());
 
         if (Match(TokenType.LeftParenthesis))
         {
@@ -164,7 +242,7 @@ public class Parser(IList<Token> tokens)
     }
 
     // The panic mode, which is activated when no rule is fulfilled.
-    ParseException Panic(Token token, string message)
+    static ParseException Panic(Token token, string message)
     {
         ErrorHelper.ReportCompileTime(token, message);
         return new ParseException();
@@ -198,8 +276,8 @@ public class Parser(IList<Token> tokens)
     }
 
     // Consumes the current token if type matches, otherwise enter panic mode.
-    Token? TryConsume(TokenType type, string errorMessage)
-        => Check(type) ? Advance() : throw Panic(Peek(), errorMessage);
+    Token TryConsume(TokenType type, string errorMessage)
+        => Check(type) ? Advance()! : throw Panic(Peek(), errorMessage);
 
     // Check the current token's type.
     bool Check(TokenType type) => !HasReachedEnd() && Peek().Type == type;

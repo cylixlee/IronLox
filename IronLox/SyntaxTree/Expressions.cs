@@ -1,14 +1,16 @@
 ﻿namespace IronLox.SyntaxTree;
 
 [SyntaxTree(
+    Usings = ["IronLox.Scanning"],
     Interface = "IExpression",
     VisitorInterface = "IExpressionVisitor",
     Patterns = [
-        "BinaryExpression : IExpression left, Token @operator, IExpression right",
+        "AssignExpression   : Token name, IExpression value",
+        "BinaryExpression   : IExpression left, Token @operator, IExpression right",
         "GroupingExpression : IExpression expression",
-        "LiteralExpression : object? value",
-        "UnaryExpression : Token @operator, IExpression right",
-    ],
-    Usings = ["IronLox.Scanning"]
+        "LiteralExpression  : object? value",
+        "UnaryExpression    : Token @operator, IExpression right",
+        "VariableExpression : Token name",
+    ]
 )]
 public static partial class Expressions;

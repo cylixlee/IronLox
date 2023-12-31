@@ -45,7 +45,7 @@ public static class ErrorHelper
 
     public static void ReportRuntime(RuntimeException exception)
     {
-        Console.WriteLine($"<line {exception.Token.Line}> {exception.Message}");
+        WriteErrorLine($"RuntimeError <line {exception.Token.Line}>", exception.Message);
         RuntimeErrorOccurred = true;
     }
 
@@ -64,7 +64,32 @@ public static class ErrorHelper
     // The real report function. Outputs the error message along with its line number and place.
     static void Report(int lineNumber, string place, string message)
     {
-        Console.Error.WriteLine($"[line {lineNumber}] Error at {place}: {message}");
+        WriteErrorLine($"CompileTimeError [line {lineNumber}]", $"at {place}: {message}");
         CompileTimeErrorOccurred = true;
     }
+
+    #region Colorize
+    static void WriteErrorLine(string tag, string message)
+    {
+        WriteColored(ConsoleColor.Red, tag, Console.Error);
+        Console.Error.Write(' ');
+        Console.Error.WriteLine(message);
+    }
+
+    static void WriteColored(ConsoleColor color, string message, TextWriter? target = null)
+    {
+        var previousColor = Console.ForegroundColor;
+        {
+            Console.ForegroundColor = color;
+            (target ?? Console.Out).Write(message);
+        }
+        Console.ForegroundColor = previousColor;
+    }
+
+    static void WriteColoredLine(ConsoleColor color, string message, TextWriter? target = null)
+    {
+        WriteColored(color, message, target);
+        Console.WriteLine();
+    }
+    #endregion
 }

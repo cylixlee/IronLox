@@ -5,7 +5,6 @@ using IronLox.Utility;
 
 namespace IronLox;
 
-// Now support print! Wow!
 class Program
 {
     static readonly Interpreter interpreter = new();

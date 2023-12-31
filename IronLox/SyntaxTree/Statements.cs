@@ -1,12 +1,17 @@
 ﻿namespace IronLox.SyntaxTree;
 
 [SyntaxTree(
+    Usings = [
+        "IronLox.Scanning",
+        "static IronLox.SyntaxTree.Expressions",
+    ],
     Interface = "IStatement",
     VisitorInterface = "IStatementVisitor",
     Patterns = [
-        "ExpressionStatement : IExpression expression",
-        "PrintStatement : IExpression expression",
-    ],
-    Usings = ["static IronLox.SyntaxTree.Expressions"]
+        "BlockStatement               : IEnumerable<IStatement> statements",
+        "ExpressionStatement          : IExpression expression",
+        "PrintStatement               : IExpression expression",
+        "VariableDeclarationStatement : Token name, IExpression? initializer",
+    ]
 )]
 public static partial class Statements;
