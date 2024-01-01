@@ -109,6 +109,15 @@ public class Interpreter : IExpressionVisitor<object?>, IStatementVisitor<object
 
     public object? Visit(ExpressionStatement element) => element.Expression.Accept(this);
 
+    public object? Visit(IfStatement element)
+    {
+        if (IsConvertiblyTrue(element.Condition))
+            element.ThenBranch.Accept(this);
+        else
+            element.ElseBranch?.Accept(this);
+        return null;
+    }
+
     public object? Visit(PrintStatement element)
     {
         var previousColor = Console.ForegroundColor;

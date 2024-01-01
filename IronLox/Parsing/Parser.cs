@@ -10,8 +10,10 @@ namespace IronLox.Parsing;
  * declaration -> varDecl
  *              | statement;
  * statement -> exprStmt
+ *              | ifStmt
  *              | printStmt
  *              | block;
+ * ifStmt -> "if" "(" expression ")" statement ( "else" statement )?;
  * block -> "{" declaration* "}";
  * exprStmt -> expression ";";
  * printStmt -> "print" expression ";";
@@ -20,7 +22,9 @@ namespace IronLox.Parsing;
  * 
  * expression -> assignment;
  * assignment -> IDENTIFIER "=" assignment
- *              | equality;
+ *              | logic_or;
+ * logic_or -> logic_and ( "or" logic_and )* ;
+ * logic_and -> equality ( "and" equality )* ;
  * equality -> comparison (("!=" | "==") comparison)*;
  * comparison -> term ((">" | ">=" | "<" | "<=") term)*;
  * term -> factor (("+" | "-") factor)*;
@@ -69,7 +73,7 @@ public class Parser(IList<Token> tokens)
         }
     }
 
-    IStatement ParseVariableDeclaration()
+    VariableDeclarationStatement ParseVariableDeclaration()
     {
         var name = TryConsume(TokenType.Identifier, "expected variable name");
 
@@ -85,6 +89,8 @@ public class Parser(IList<Token> tokens)
 
     IStatement ParseStatement()
     {
+        if (Match(TokenType.If))
+            return ParseIfStatement();
         if (Match(TokenType.Print))
             return ParsePrintStatement();
         if (Match(TokenType.LeftBracket))
@@ -92,21 +98,33 @@ public class Parser(IList<Token> tokens)
         return ParseExpressionStatement();
     }
 
-    IStatement ParsePrintStatement()
+    IfStatement ParseIfStatement()
+    {
+        TryConsume(TokenType.LeftParenthesis, "expect '(' after keyword 'if'.");
+        var condition = ParseExpression();
+        TryConsume(TokenType.RightParenthesis, "expect '(' after 'if' condition.");
+
+        var thenBranch = ParseStatement();
+        var elseBranch = Match(TokenType.Else) ? ParseStatement() : null;
+
+        return new IfStatement(condition, thenBranch, elseBranch);
+    }
+
+    PrintStatement ParsePrintStatement()
     {
         var expression = ParseExpression();
         TryConsume(TokenType.Semicolon, "expected ';' after a statement.");
         return new PrintStatement(expression);
     }
 
-    IStatement ParseExpressionStatement()
+    ExpressionStatement ParseExpressionStatement()
     {
         var expression = ParseExpression();
         TryConsume(TokenType.Semicolon, "expected ';' after a statement.");
         return new ExpressionStatement(expression);
     }
 
-    IEnumerable<IStatement> ParseBlock()
+    List<IStatement> ParseBlock()
     {
         var statements = new List<IStatement>();
         while (!Check(TokenType.RightBracket) && !HasReachedEnd())

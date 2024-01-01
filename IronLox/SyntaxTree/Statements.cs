@@ -10,6 +10,7 @@
     Patterns = [
         "BlockStatement               : IEnumerable<IStatement> statements",
         "ExpressionStatement          : IExpression expression",
+        "IfStatement                  : IExpression condition, IStatement thenBranch, IStatement? elseBranch",
         "PrintStatement               : IExpression expression",
         "VariableDeclarationStatement : Token name, IExpression? initializer",
     ]
