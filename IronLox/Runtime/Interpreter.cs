@@ -41,7 +41,7 @@ public class Interpreter : IExpressionVisitor<object?>, IStatementVisitor<object
     #region Expressions
     public object? Visit(AssignExpression element)
     {
-        var value = element.Accept(this);
+        var value = element.Value.Accept(this);
         context.Assign(element.Name, value);
         return value;
     }
@@ -83,6 +83,21 @@ public class Interpreter : IExpressionVisitor<object?>, IStatementVisitor<object
 
     public object? Visit(GroupingExpression element) => element.Expression.Accept(this);
     public object? Visit(LiteralExpression element) => element.Value;
+
+    public object? Visit(LogicalExpression element)
+    {
+        var left = element.Left.Accept(this);
+
+        if (element.Operator.Type is TokenType.Or)
+        {
+            if (IsConvertiblyTrue(left)) return left;
+        }
+        else
+        {
+            if (!IsConvertiblyTrue(left)) return left;
+        }
+        return element.Right.Accept(this);
+    }
 
     public object? Visit(UnaryExpression element)
     {
@@ -136,6 +151,15 @@ public class Interpreter : IExpressionVisitor<object?>, IStatementVisitor<object
             value = element.Initializer.Accept(this);
         context.DefineVariable(element.Name.Lexeme, value);
         return value;
+    }
+
+    public object? Visit(WhileStatement element)
+    {
+        while (IsConvertiblyTrue(element.Condition.Accept(this)))
+        {
+            element.Body.Accept(this);
+        }
+        return null;
     }
     #endregion
 

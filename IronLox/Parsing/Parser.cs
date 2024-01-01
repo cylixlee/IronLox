@@ -10,9 +10,15 @@ namespace IronLox.Parsing;
  * declaration -> varDecl
  *              | statement;
  * statement -> exprStmt
+ *              | forStmt
  *              | ifStmt
  *              | printStmt
+ *              | whileStmt
  *              | block;
+ * forStmt -> "for" "(" ( varDecl | exprStmt | ";" )
+ *            expression? ";"
+ *            expression? ")" statement;
+ * whileStmt -> "while" "(" expression ")" statement;
  * ifStmt -> "if" "(" expression ")" statement ( "else" statement )?;
  * block -> "{" declaration* "}";
  * exprStmt -> expression ";";
@@ -87,15 +93,53 @@ public class Parser(IList<Token> tokens)
         return new VariableDeclarationStatement(name, initializer);
     }
 
+    WhileStatement ParseWhileStatement()
+    {
+        TryConsume(TokenType.LeftParenthesis, "expect '(' after 'while'.");
+        var condition = ParseExpression();
+        TryConsume(TokenType.RightParenthesis, "expect ')' after 'while' condition.");
+
+        var body = ParseStatement();
+        return new WhileStatement(condition, body);
+    }
+
     IStatement ParseStatement()
     {
-        if (Match(TokenType.If))
-            return ParseIfStatement();
-        if (Match(TokenType.Print))
-            return ParsePrintStatement();
-        if (Match(TokenType.LeftBracket))
-            return new BlockStatement(ParseBlock());
+        if (Match(TokenType.For)) return ParseForStatement();
+        if (Match(TokenType.If)) return ParseIfStatement();
+        if (Match(TokenType.Print)) return ParsePrintStatement();
+        if (Match(TokenType.While)) return ParseWhileStatement();
+        if (Match(TokenType.LeftBracket)) return new BlockStatement(ParseBlock());
         return ParseExpressionStatement();
+    }
+
+    IStatement ParseForStatement()
+    {
+        TryConsume(TokenType.LeftParenthesis, "expect '(' after keyword 'for'.");
+
+        IStatement? initializer;
+        if (Match(TokenType.Semicolon)) initializer = null;
+        else if (Match(TokenType.Var)) initializer = ParseVariableDeclaration();
+        else initializer = ParseExpressionStatement();
+
+        var condition = Match(TokenType.Semicolon) ? null : ParseExpression();
+        TryConsume(TokenType.Semicolon, "expect ';' after 'for' condition.");
+
+        var increment = Check(TokenType.RightParenthesis) ? null : ParseExpression();
+        TryConsume(TokenType.RightParenthesis, "expect ')' after 'for' clauses.");
+
+        var body = ParseStatement();
+        if (increment is not null)
+        {
+            body = new BlockStatement([body, new ExpressionStatement(increment)]);
+        }
+        condition = condition is null ? new LiteralExpression(true) : condition;
+        body = new WhileStatement(condition, body);
+        if (initializer is not null)
+        {
+            body = new BlockStatement([initializer, body]);
+        }
+        return body;
     }
 
     IfStatement ParseIfStatement()
@@ -144,7 +188,7 @@ public class Parser(IList<Token> tokens)
 
     IExpression ParseAssignment()
     {
-        var expression = ParseEquality();
+        var expression = ParseLogicalOr();
         if (Match(TokenType.Equal))
         {
             var leftValue = Previous();
@@ -156,6 +200,30 @@ public class Parser(IList<Token> tokens)
             }
 
             throw Panic(leftValue, "invalid assignment target.");
+        }
+        return expression;
+    }
+
+    IExpression ParseLogicalOr()
+    {
+        var expression = ParseLogicalAnd();
+        while (Match(TokenType.Or))
+        {
+            var @operator = Previous();
+            var right = ParseLogicalAnd();
+            expression = new LogicalExpression(expression, @operator, right);
+        }
+        return expression;
+    }
+
+    IExpression ParseLogicalAnd()
+    {
+        var expression = ParseEquality();
+        while (Match(TokenType.And))
+        {
+            var @operator = Previous();
+            var right = ParseEquality();
+            expression = new LogicalExpression(expression, @operator, right);
         }
         return expression;
     }

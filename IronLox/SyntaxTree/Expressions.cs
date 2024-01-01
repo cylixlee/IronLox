@@ -9,7 +9,7 @@
         "BinaryExpression   : IExpression left, Token @operator, IExpression right",
         "GroupingExpression : IExpression expression",
         "LiteralExpression  : object? value",
-        "Logical            : IExpression left, Token @operator, IExpression right",
+        "LogicalExpression  : IExpression left, Token @operator, IExpression right",
         "UnaryExpression    : Token @operator, IExpression right",
         "VariableExpression : Token name",
     ]
